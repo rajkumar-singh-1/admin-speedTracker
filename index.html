@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ADMIN - Speeding Vehicle Tracker</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            font-size: 24px;
+        }
+        .speeding-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .speeding-card {
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px;
+            text-align: left;
+            background-color: #f9f9f9;
+        }
+    </style>
+</head>
+<body>
+    <h1>Speeding Vehicle Tracker</h1>
+    <ul class="speeding-list" id="speeding-list"></ul>
+
+    <script>
+      const ws = new WebSocket('wss://speedtr.online');
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("DATA::",data);
+        if (data.type === 'speeding') {
+          const timestamp = new Date(data.timestamp);
+          const formattedTimestamp = `${timestamp.getDate()}/${timestamp.getMonth() + 1}/${timestamp.getFullYear()} ${timestamp.getHours()}:${timestamp.getMinutes()}:${timestamp.getSeconds()}`;
+          alert(`Vehicle No: ${data.vehicleNo}, (NAME: ${data.name}), phone number: ${data.phoneNo}, speed: ${data.speed} km/hr, was speeding at: ${formattedTimestamp}`);
+          // You can also update the UI to display the speeding events
+          const speedingList = document.getElementById('speeding-list');
+          const cardContainer = document.createElement('div');
+          cardContainer.className = 'speeding-card';
+          const listItem = document.createElement('li');
+          listItem.textContent = `Vehicle No: ${data.vehicleNo}, (NAME: ${data.name}), phone number: ${data.phoneNo}, speed: ${data.speed} km/hr, was speeding at: ${formattedTimestamp}`;
+          cardContainer.appendChild(listItem);
+          speedingList.appendChild(cardContainer);
+        } else if (data.type === 'initial') {
+          // Clear existing list and add new events
+          const speedingList = document.getElementById('speeding-list');
+          speedingList.innerHTML = '';
+          data.speedingEvents.forEach(event => {
+            const timestamp = new Date(event.timestamp);
+            const formattedTimestamp = `${timestamp.getDate()}/${timestamp.getMonth() + 1}/${timestamp.getFullYear()} ${timestamp.getHours()}:${timestamp.getMinutes()}:${timestamp.getSeconds()}`;
+            const cardContainer = document.createElement('div');
+            cardContainer.className = 'speeding-card';
+            const listItem = document.createElement('li');
+            listItem.textContent = `Vehicle No: ${event.vehicleNo}, (NAME: ${event.name}), phone number: ${event.phone}, speed: ${event.speed} km/hr, was speeding at: ${formattedTimestamp}`;
+            cardContainer.appendChild(listItem);
+            speedingList.appendChild(cardContainer);
+          });
+        }
+      };
+    </script>
+</body>
+</html>
